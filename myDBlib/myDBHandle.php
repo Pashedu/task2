@@ -44,40 +44,37 @@ class myDBHandle
         $queryRequest = self::$mySQLHandle->prepare($sql);
         try {
             $date = date('Y/m/d');
-            //     var_dump($date);
             $result = $queryRequest->execute($values);
             var_dump($result);
-            // $queryRequest = self::$mySQLHandle->query('INSERT INTO Companies(id,companyname,regdate,active,description) VALUES (null,"ftftftftf",CURRENT_DATE,true,"yghuikhj iughtrdf iugkjdrrf kihjtrdyg")');
+            // $queryRequest = sel::$mySQLHandle->query('INSERT INTO Companies(id,companyname,regdate,active,description) VALUES (null,"ftftftftf",CURRENT_DATE,true,"yghuikhj iughtrdf iugkjdrrf kihjtrdyg")');
         } catch (\PDOException $e) {
             print "Err! - " . $e->getMessage() . "<br>";
         }
     }
 
-    function searchRecord($whatToSearch)
+    function searchRecords($whatToSearch, $whereToSearch = 'Companies', $glue = '')
     {
-        $queryRequest = self::$mySQLHandle->prepare('SELECT * From Companies WHERE id = :id');
-        $queryRequest->bindParam('id', $whatToSearch);
-        $result = $queryRequest->execute();
-        // var_dump($result);
-        $rows = $queryRequest->fetchAll(\PDO::FETCH_ASSOC);
-        foreach ($rows as $row) {
-            echo '<tr><td>' . implode('</td><td>', $row) . '</td></tr>';
+        $sql="SELECT * From $whereToSearch WHERE";
+        foreach ($whatToSearch as $field => $item) {
+            //echo '<br>'.$field.'  ----  '.$item.'<br>';
+            $sql .=" $field = :$field $glue";
         }
-        //      echo json_encode($rows,JSON_PRETTY_PRINT);
-        //  var_dump($rows);
-        //
+        $sql=substr($sql,0,-(strlen($glue)+1));
+        var_dump($sql);
+        $queryRequest = self::$mySQLHandle->prepare($sql);
+        $result = $queryRequest->execute($whatToSearch);
+        $rows = $queryRequest->fetchAll(\PDO::FETCH_ASSOC);
+        return $rows;
     }
 
     function viewAll()
     {
         $queryRequest = self::$mySQLHandle->query('SELECT * From Companies');
         $rows = $queryRequest->fetchAll(\PDO::FETCH_ASSOC);
-        echo '<table>';
-        foreach ($rows as $row) {
-            echo '<tr><td>' . implode('</td><td>', $row) . '</td></tr>';
-        }
-        echo '</table>';
+        return $rows;
+     /*
         // echo json_encode($rows,JSON_PRETTY_PRINT);
+     */
     }
 
     function updateRecord($table,$id,$values)
