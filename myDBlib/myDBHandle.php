@@ -21,18 +21,15 @@ class myDBHandle
             print "Err! - " . $e->getMessage() . "<br>";
             die();
         }
-        print "connect establish<br>";
         $queryResult = self::$mySQLHandle->query("USE testDB");
-        //var_dump($queryResult);
     }
 
     function getDBInfo()
     {
         $queryResult = self::$mySQLHandle->query("show databases");
-        //var_dump($queryResult);
+
         foreach ($queryResult as $row) {
             print "<br>Result - " . $row[0];
-            //  var_dump($row);
         }
         self::$mySQLHandle = null;
     }
@@ -40,12 +37,29 @@ class myDBHandle
     function newRecord($table, $values)
     {
         //$insertString = implode('=',$values);
-        $sql = 'INSERT INTO ' . $table . '(id,companyname,regdate,active,description) VALUES (:id,:companyname,:regdate,:active,:description)';
+        //$sql = 'INSERT INTO ' . $table . '(id,companyname,regdate,active,description) VALUES (:id,:companyname,:regdate,:active,:description)';
+        $sql = "INSERT INTO {$table} ";
+        $fields = '(';
+        $prepareValues = '(';
+        foreach ($values as $field => $item) {
+            $fields .= $field.',';
+            $prepareValues .= ':'.$field.',';
+        }
+        $fields=substr($fields,0,-1);
+        $prepareValues=substr($prepareValues,0,-1);
+        $sql .= $fields.') VALUES '.$prepareValues.')';
+       // var_dump($sql);
         $queryRequest = self::$mySQLHandle->prepare($sql);
         try {
-            $date = date('Y/m/d');
-            $result = $queryRequest->execute($values);
-            var_dump($result);
+            //$date = date('Y/m/d');
+            $queryRequest->execute($values);
+
+            $queryRequest = self::$mySQLHandle->prepare("SELECT LAST_INSERT_ID()");
+            $queryRequest->execute();
+            $result = $queryRequest->fetch(\PDO::FETCH_ASSOC);
+         //   echo 'AAAA ---- ';
+         //   var_dump($result);
+            return $result['LAST_INSERT_ID()'];
             // $queryRequest = sel::$mySQLHandle->query('INSERT INTO Companies(id,companyname,regdate,active,description) VALUES (null,"ftftftftf",CURRENT_DATE,true,"yghuikhj iughtrdf iugkjdrrf kihjtrdyg")');
         } catch (\PDOException $e) {
             print "Err! - " . $e->getMessage() . "<br>";
@@ -60,7 +74,7 @@ class myDBHandle
             $sql .=" $field = :$field $glue";
         }
         $sql=substr($sql,0,-(strlen($glue)+1));
-        var_dump($sql);
+    //    var_dump($sql);
         $queryRequest = self::$mySQLHandle->prepare($sql);
         $result = $queryRequest->execute($whatToSearch);
         $rows = $queryRequest->fetchAll(\PDO::FETCH_ASSOC);
@@ -82,15 +96,24 @@ class myDBHandle
         $sql = 'UPDATE '.$table.' SET ';
 
         foreach ($values as $field => $item) {
-            echo '<br>'.$field.'  ----  '.$item.'<br>';
+           // echo '<br>'.$field.'  ----  '.$item.'<br>';
             $sql .= $field.' = :'.$field.',';
         }
         $sql=substr($sql,0,-1);
         $sql.= ' WHERE id = '.$id;
         $queryRequest = self::$mySQLHandle->prepare($sql);
         $result = $queryRequest->execute($values);
-        var_dump($queryRequest->errorInfo());
-        echo '<br>'.$result;
+     //   var_dump($queryRequest->errorInfo());
+      //  echo '<br>'.$result;
 
+    }
+    function deleteRecord($table,$id)
+    {
+        $sql="DELETE FROM {$table} WHERE id = :id";
+        $queryRequest = self::$mySQLHandle->prepare($sql);
+        $queryRequest->bindParam('id',$id);
+        $queryRequest->execute();
+       // echo "<br>";
+        //var_dump($queryRequest->errorInfo());
     }
 }

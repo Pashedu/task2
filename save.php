@@ -12,8 +12,8 @@
 
     if(($_POST['Add']=='addNew'))
     {
-        var_dump($_POST);
-        render('newcompanyadd.php');
+      //  var_dump($_POST);
+        render('newcompanyadd1.php',['id'=>0]);
     }
     else {
 
@@ -26,6 +26,7 @@
             'description' => $_POST['desc']
         ]);
         echo '<br><br><br>';
+
         $res = $dbh->newRecord('compDomains', ['id' => null, 'comp_id' => $newId, 'compDomain' => $_POST['url1']]);
         echo "<br>$res";
         $officeId = $dbh->newRecord('offices', ['id' => null, 'comp_id' => $newId, 'address' => $_POST['address']]);

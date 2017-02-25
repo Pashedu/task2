@@ -6,45 +6,19 @@
  * Time: 12:06
  */
 require_once "myDBlib/myDBHandle.php";
-
+require_once "controller/render.php";
 $dbh = new \myDBHandle\myDBHandle();
 
 
-    if(isset($_POST['save']))
+    $rows=$dbh->searchRecords(['id'=>$_POST['edit']],'Companies');
+    $rows[1]=$dbh->searchRecords(['comp_id'=>$rows[0]['id']],'compDomains');
+    $rows[2]=$dbh->searchRecords(['comp_id'=>$rows[0]['id']],'offices');
+    for($i=0, $officesCount=count($rows[2]); $i<$officesCount; $i++)
     {
-        $dbh->updateRecord('Companies',$_POST['save'],['companyname'=>$_POST['compname'],
-            'regdate'=>$_POST['regdate'],'description'=>$_POST['desc']]);
-        echo 'Record Updated';
-        $rows=$dbh->searchRecords(['id'=>$_POST['save']],'Companies');
-        renderFields($rows);
-    }
-    if (isset($_POST['edit']))
-    {
-        $rows=$dbh->searchRecords(['id'=>$_POST['edit']],'Companies');
-        var_dump($rows);
-        renderFields($rows);
 
+        $rows[2][$i][1]=$dbh->searchRecords(['office_id'=>$rows[2][$i]['id']],'workers');
     }
-    if(isset($_POST['restore']))
-    {
-        $dbh->updateRecord('Companies',$_POST['restore'],['active'=>1]);
-        echo "Restored record with id ".$_POST['restore'];
-    }
-    if (isset($_POST['delete']))
-    {
-        $dbh->updateRecord('Companies',$_POST['delete'],['active'=>0]);
-        echo "Deleted record with id ".$_POST['delete'];
+    render('newcompanyadd1.php',['id'=>$_POST['edit'],'company'=>$rows[0],'urls'=>$rows[1],'offices'=>$rows[2]]);
 
-    }
-    function renderFields($rows)
-    {
-        echo "<form method='post' action='editRecord.php'>";
-        echo "<input name='compname' type='text' value='".$rows[0]['companyname']."'>";
-        echo "<input name='regdate' type='text' value='".$rows[0]['regdate']."'>";
-        echo "<input name='desc' type='text' value='".$rows[0]['description']."'>";
-        echo "<br>";
-        echo "<button name='save' type='submit' value='".$rows[0]['id']."'>Save</button>";
-        echo "<input type='reset' value='Reset'>";
-        echo "</form>";
-    }
+
 
